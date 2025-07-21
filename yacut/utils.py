@@ -1,4 +1,4 @@
-from random import choice
+import random
 import string
 
 from .constants import DEFAULT_SHORT_URL_LENGTH
@@ -7,9 +7,7 @@ from .models import URLMap
 
 def generate_short_id():
     allowed_symbols = string.ascii_letters + string.digits
-    return ''.join(
-        choice(allowed_symbols) for _ in range(DEFAULT_SHORT_URL_LENGTH)
-    )
+    return ''.join(random.choices(allowed_symbols, k=DEFAULT_SHORT_URL_LENGTH))
 
 
 def get_unique_short_id():
