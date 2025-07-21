@@ -13,9 +13,9 @@ from .views import create_url_map
 @app.route('/api/id/<string:short_url>/', methods=['GET'])
 def get_short_url(short_url):
     url_map = URLMap.query.filter_by(short=short_url).first()
-    if url_map:
-        return jsonify({'url': url_map.original}), HTTPStatus.OK
-    raise InvalidAPIUsage('Указанный id не найден', HTTPStatus.NOT_FOUND)
+    if url_map is None:
+        raise InvalidAPIUsage('Указанный id не найден', HTTPStatus.NOT_FOUND)
+    return jsonify({'url': url_map.original}), HTTPStatus.OK
 
 
 @app.route('/api/id/', methods=['POST'])
@@ -26,7 +26,8 @@ def create_short_url():
             'Отсутствует тело запроса',
             HTTPStatus.BAD_REQUEST
         )
-    if 'url' not in data:
+    original_link = data.get('url')
+    if not original_link:
         raise InvalidAPIUsage('"url" является обязательным полем!')
 
     custom_id = data.get('custom_id')
@@ -48,4 +49,8 @@ def create_short_url():
     url_map = create_url_map(data['url'], custom_id)
     db.session.add(url_map)
     db.session.commit()
-    return jsonify(url_map.to_dict()), HTTPStatus.CREATED
+    short_link = f'{request.host_url}{url_map.short}'
+    return jsonify({
+        'short_link': short_link,
+        'url': original_link
+    }), HTTPStatus.CREATED

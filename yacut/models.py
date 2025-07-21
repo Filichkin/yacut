@@ -1,7 +1,5 @@
 from datetime import datetime, timezone
 
-from flask import url_for
-
 from . import db
 from .constants import (
     MAX_SHORT_URL_LENGTH,
@@ -28,13 +26,3 @@ class URLMap(db.Model):
         index=True,
         default=datetime.now(timezone.utc)
     )
-
-    def to_dict(self):
-        return {
-            'url': self.original,
-            'short_link': url_for(
-                'get_short_url',
-                short_url=self.short,
-                _external=True
-            )
-        }
