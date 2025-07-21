@@ -8,6 +8,7 @@ from wtforms.validators import (
 )
 
 from .constants import (
+    ALLOWED_SYMBOLS,
     MAX_SHORT_URL_LENGTH,
     MAX_URL_LENGTH,
 )
@@ -30,7 +31,7 @@ class URLForm(FlaskForm):
                 MAX_SHORT_URL_LENGTH,
                 message='Слишком длинный идентификатор'
             ),
-            Regexp(r'^[a-zA-Z0-9]+$', message='Некорректный идентификатор')
+            Regexp(ALLOWED_SYMBOLS, message='Некорректный идентификатор')
         ]
     )
     submit = SubmitField('Создать')
