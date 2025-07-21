@@ -18,14 +18,18 @@ class URLForm(FlaskForm):
         'Длинная ссылка',
         validators=[
             DataRequired(message='Обязательное поле'),
-            Length(1, MAX_SHORT_URL_LENGTH, message='Слишком длинная ссылка')
+            Length(1, MAX_URL_LENGTH, message='Слишком длинная ссылка')
         ]
     )
     custom_id = StringField(
         'Короткая ссылка',
         validators=[
             Optional(),
-            Length(1, MAX_URL_LENGTH, message='Слишком длинный идентификатор'),
+            Length(
+                1,
+                MAX_SHORT_URL_LENGTH,
+                message='Слишком длинный идентификатор'
+            ),
             Regexp(r'^[a-zA-Z0-9]+$', message='Некорректный идентификатор')
         ]
     )
