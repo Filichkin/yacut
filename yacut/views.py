@@ -36,7 +36,7 @@ def index():
 
 
 @app.route('/<string:short_url>')
-def edirect_to_original(short_url):
+def redirect_to_original(short_url):
     """Функция для переадресации."""
 
     url_map = URLMap.query.filter_by(short=short_url).first_or_404()
