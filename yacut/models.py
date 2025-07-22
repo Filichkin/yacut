@@ -1,9 +1,13 @@
 from datetime import datetime, timezone
 import random
+import re
 import string
+
+from wtforms.validators import ValidationError
 
 from . import db
 from .constants import (
+    ALLOWED_SYMBOLS,
     DEFAULT_SHORT_URL_LENGTH,
     MAX_GENARATE_ITERATIONS,
     MAX_SHORT_URL_LENGTH,
@@ -46,3 +50,27 @@ class URLMap(db.Model):
     @staticmethod
     def get(short_url):
         return URLMap.query.filter_by(short=short_url).first()
+
+    @staticmethod
+    def save(original_link, short_url):
+        if not short_url:
+            short_url = URLMap.get_unique_short_id()
+        if len(short_url) > MAX_SHORT_URL_LENGTH:
+            raise ValidationError(
+                f'Длина короткой ссылки не должна превышать '
+                f'{MAX_SHORT_URL_LENGTH} символоа'
+            )
+        if not re.match(ALLOWED_SYMBOLS, short_url):
+            raise ValidationError(
+                'Указано недопустимое имя для короткой ссылки'
+            )
+        url_map = URLMap(original=original_link, short=short_url)
+        db.session.add(url_map)
+        db.session.commit()
+        return url_map
+
+    def to_dict(self):
+        return dict(
+            original=self.original,
+            short=self.short,
+        )

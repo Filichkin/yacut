@@ -1,18 +1,16 @@
 from http import HTTPStatus
-import re
 
 from flask import jsonify, request
-from yacut import app, db
+from wtforms import ValidationError
 
-from .constants import ALLOWED_SYMBOLS, MAX_SHORT_URL_LENGTH
-from .error_handlers import InvalidAPIUsage
+from . import app
+from .error_handlers import ImpossibleToCreate, InvalidAPIUsage
 from .models import URLMap
-from .views import create_url_map
 
 
 @app.route('/api/id/<string:short_url>/', methods=['GET'])
 def get_short_url(short_url):
-    url_map = URLMap.query.filter_by(short=short_url).first()
+    url_map = URLMap.get(short_url)
     if url_map is None:
         raise InvalidAPIUsage('Указанный id не найден', HTTPStatus.NOT_FOUND)
     return jsonify({'url': url_map.original}), HTTPStatus.OK
@@ -27,30 +25,21 @@ def create_short_url():
             HTTPStatus.BAD_REQUEST
         )
     original_link = data.get('url')
+    print(original_link)
+    custom_id = data.get('custom_id')
     if not original_link:
         raise InvalidAPIUsage('"url" является обязательным полем!')
 
-    custom_id = data.get('custom_id')
-    if custom_id:
-        if len(custom_id) > MAX_SHORT_URL_LENGTH:
-            raise InvalidAPIUsage(
-                'Указано недопустимое имя для короткой ссылки',
-                HTTPStatus.BAD_REQUEST
-            )
-        if not re.match(ALLOWED_SYMBOLS, custom_id):
-            raise InvalidAPIUsage(
-                'Указано недопустимое имя для короткой ссылки'
-            )
-        if URLMap.query.filter_by(short=custom_id).first():
-            raise InvalidAPIUsage(
-                'Предложенный вариант короткой ссылки уже существует.'
-            )
-
-    url_map = create_url_map(data['url'], custom_id)
-    db.session.add(url_map)
-    db.session.commit()
-    short_link = f'{request.host_url}{url_map.short}'
-    return jsonify({
-        'short_link': short_link,
-        'url': original_link
-    }), HTTPStatus.CREATED
+    try:
+        url_map = URLMap.save(
+            original_link,
+            custom_id,
+        )
+        return jsonify(
+            {
+                'short_link': f'{request.host_url}{url_map.short}',
+                'url': original_link
+            }
+        ), HTTPStatus.CREATED
+    except (ValidationError, ImpossibleToCreate) as error:
+        raise InvalidAPIUsage(str(error))
