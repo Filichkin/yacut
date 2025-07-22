@@ -4,6 +4,11 @@ from http import HTTPStatus
 from . import app, db
 
 
+class ImpossibleToCreate(Exception):
+    def __init__(self, message='Невозможно создать ссылку'):
+        super().__init__(message)
+
+
 class InvalidAPIUsage(Exception):
     status_code = HTTPStatus.BAD_REQUEST
 
