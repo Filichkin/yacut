@@ -26,3 +26,7 @@ class URLMap(db.Model):
         index=True,
         default=datetime.now(timezone.utc)
     )
+
+    @staticmethod
+    def get(short_url):
+        return URLMap.query.filter_by(short=short_url).first()
