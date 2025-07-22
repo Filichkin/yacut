@@ -48,22 +48,28 @@ class URLMap(db.Model):
         raise ImpossibleToCreate()
 
     @staticmethod
-    def get(short_url):
-        return URLMap.query.filter_by(short=short_url).first()
+    def get(short, first_404=False):
+        if first_404:
+            return URLMap.query.filter_by(short=short).first_or_404()
+        return URLMap.query.filter_by(short=short).first()
 
     @staticmethod
     def save(original_link, short_url):
-        if not short_url:
+        if short_url:
+            if len(short_url) > MAX_SHORT_URL_LENGTH:
+                raise ValidationError(
+                    'Указано недопустимое имя для короткой ссылки'
+                )
+            if not re.match(ALLOWED_SYMBOLS, short_url):
+                raise ValidationError(
+                    'Указано недопустимое имя для короткой ссылки'
+                )
+            if URLMap.get(short_url):
+                raise ValueError(
+                    'Предложенный вариант короткой ссылки уже существует.'
+                )
+        else:
             short_url = URLMap.get_unique_short_id()
-        if len(short_url) > MAX_SHORT_URL_LENGTH:
-            raise ValidationError(
-                f'Длина короткой ссылки не должна превышать '
-                f'{MAX_SHORT_URL_LENGTH} символоа'
-            )
-        if not re.match(ALLOWED_SYMBOLS, short_url):
-            raise ValidationError(
-                'Указано недопустимое имя для короткой ссылки'
-            )
         url_map = URLMap(original=original_link, short=short_url)
         db.session.add(url_map)
         db.session.commit()

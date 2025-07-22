@@ -1,10 +1,9 @@
 from http import HTTPStatus
 
 from flask import jsonify, request
-from wtforms import ValidationError
 
 from . import app
-from .error_handlers import ImpossibleToCreate, InvalidAPIUsage
+from .error_handlers import InvalidAPIUsage
 from .models import URLMap
 
 
@@ -19,21 +18,22 @@ def get_short_url(short_url):
 @app.route('/api/id/', methods=['POST'])
 def create_short_url():
     data = request.get_json(silent=True)
+
     if not data or not request.is_json:
         raise InvalidAPIUsage(
             'Отсутствует тело запроса',
             HTTPStatus.BAD_REQUEST
         )
     original_link = data.get('url')
-    print(original_link)
     custom_id = data.get('custom_id')
+
     if not original_link:
         raise InvalidAPIUsage('"url" является обязательным полем!')
 
     try:
         url_map = URLMap.save(
             original_link,
-            custom_id,
+            custom_id
         )
         return jsonify(
             {
@@ -41,5 +41,5 @@ def create_short_url():
                 'url': original_link
             }
         ), HTTPStatus.CREATED
-    except (ValidationError, ImpossibleToCreate) as error:
+    except ValueError as error:
         raise InvalidAPIUsage(str(error))
