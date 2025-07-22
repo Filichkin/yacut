@@ -1,8 +1,8 @@
 import random
 import string
 
-from .constants import DEFAULT_SHORT_URL_LENGTH
-from .models import URLMap
+from ..yacut.constants import DEFAULT_SHORT_URL_LENGTH
+from ..yacut.models import URLMap
 
 
 def generate_short_id():
