@@ -1,7 +1,10 @@
 from http import HTTPStatus
+
 from flask import flash, redirect, render_template
+from wtforms import ValidationError
 
 from . import app
+from .error_handlers import ImpossibleToCreate
 from .forms import URLForm
 from .models import URLMap
 
@@ -20,7 +23,7 @@ def index():
                 form=form,
                 short_url=URLMap.save(original_link, short_url).short
             )
-        except ValueError as error:
+        except (ValueError, ValidationError, ImpossibleToCreate) as error:
             flash(str(error))
     return render_template('main.html', form=form)
 
