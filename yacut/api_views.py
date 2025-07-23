@@ -1,9 +1,10 @@
 from http import HTTPStatus
 
 from flask import jsonify, request
+from wtforms import ValidationError
 
 from . import app
-from .error_handlers import InvalidAPIUsage
+from .error_handlers import InvalidAPIUsage, ImpossibleToCreate
 from .models import URLMap
 
 
@@ -41,5 +42,5 @@ def create_short_url():
                 'url': original_link
             }
         ), HTTPStatus.CREATED
-    except ValueError as error:
+    except (ValueError, ValidationError, ImpossibleToCreate) as error:
         raise InvalidAPIUsage(str(error))
